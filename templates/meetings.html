@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkGuard AI | Meeting Processor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        /* SHARED CORE STYLES */
+        :root { --bg-dark: #0f172a; --glass-bg: rgba(30, 41, 59, 0.7); --primary-glow: #3b82f6; --success-glow: #10b981; }
+        body { background-color: var(--bg-dark); color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        .sidebar { width: 280px; height: 100vh; position: fixed; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.1); padding: 2rem; z-index: 100; }
+        .nav-link { color: #94a3b8; padding: 14px 20px; border-radius: 12px; margin-bottom: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { background: rgba(59, 130, 246, 0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.3); transform: translateX(5px); }
+        .main-content { margin-left: 280px; padding: 4rem; }
+
+        /* PAGE SPECIFIC */
+        .transcript-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            width: 100%;
+            resize: none;
+            transition: all 0.3s;
+        }
+        .transcript-box:focus { outline: none; border-color: var(--primary-glow); background: rgba(0,0,0,0.5); }
+
+        /* 3D Action Item Card */
+        .action-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .action-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255,255,255,0.06);
+            border-color: var(--success-glow);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
+        }
+        
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-glow); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+        
+        .process-btn {
+            background: linear-gradient(90deg, #10b981, #059669);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+        }
+        .process-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
+
+        /* Checkbox Custom */
+        .custom-check {
+            width: 20px; height: 20px; border: 2px solid #555; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .custom-check.checked { background: var(--success-glow); border-color: var(--success-glow); }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="mb-5 d-flex align-items-center gap-3">
+            <i class="fa-solid fa-cube fa-2x text-primary"></i>
+            <div><h5 class="fw-bold mb-0 text-white">WorkGuard</h5><small class="text-muted">AI OS v2.0</small></div>
+        </div>
+        <a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <a href="{{ url_for('contract') }}" class="nav-link"><i class="fa-solid fa-file-shield"></i> Contract Guard</a>
+        <a href="{{ url_for('meetings') }}" class="nav-link active"><i class="fa-solid fa-list-check"></i> Meeting Actions</a>
+        <a href="{{ url_for('rewrite') }}" class="nav-link"><i class="fa-solid fa-pen-fancy"></i> Tone Architect</a>
+        <a href="{{ url_for('settings') }}" class="nav-link"><i class="fa-solid fa-cog"></i> Settings</a>
+    </nav>
+
+    <main class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
+            <h2 class="fw-bold">Meeting Processor</h2>
+            <button class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fa-solid fa-microphone"></i> Upload Audio</button>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-5 animate__animated animate__fadeInLeft">
+                <label class="text-muted mb-2 text-uppercase small fw-bold">Transcript / Notes</label>
+                <textarea id="input-text" class="transcript-box mb-4" rows="12" placeholder="Paste notes here... e.g. 'John needs to fix the login bug by Friday. Sarah will design the new logo.'">John agreed to update the security protocols by Monday. 
+Sarah needs to send the client the new contract before EOD tomorrow.
+Mike is responsible for organizing the team lunch next week.</textarea>
+                
+                <button class="process-btn w-100" onclick="processMeeting()">
+                    <i class="fa-solid fa-bolt me-2"></i> Extract Action Items
+                </button>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="text-success mb-0 text-uppercase small fw-bold">Generated Tasks</label>
+                    <span class="badge bg-dark border border-secondary text-muted">AI Confidence: 98%</span>
+                </div>
+
+                <div id="task-list" class="animate__animated animate__fadeInRight">
+                    <div id="empty-state" class="text-center py-5 border border-dashed border-secondary rounded-3">
+                        <i class="fa-solid fa-list-check fa-3x text-muted mb-3 opacity-25"></i>
+                        <p class="text-muted">Ready to process...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function processMeeting() {
+            const list = document.getElementById('task-list');
+            const empty = document.getElementById('empty-state');
+            const btn = document.querySelector('.process-btn');
+            const inputText = document.getElementById('input-text').value;
+
+            // Button Loading State
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            
+            fetch('/api/process_meeting', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ transcript: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                empty.style.display = 'none';
+                
+                // Clear list and Rebuild
+                list.innerHTML = '';
+                
+                data.action_items.forEach((t, index) => {
+                    const priorityColors = {
+                        'high': 'bg-danger',
+                        'medium': 'bg-warning text-dark',
+                        'low': 'bg-info text-dark'
+                    };
+                    const color = priorityColors[t.priority] || 'bg-primary';
+                    
+                    const card = `
+                    <div class="action-card d-flex align-items-center gap-3 animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.1}s">
+                        <div class="custom-check" onclick="this.classList.toggle('checked')">
+                            <i class="fa-solid fa-check text-dark" style="font-size: 10px;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">${t.task}</h6>
+                            <small class="text-muted">Assigned to <span class="text-white">${t.owner}</span></small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${color}">${t.due}</span>
+                        </div>
+                    </div>`;
+                    list.innerHTML += card;
+                });
+
+                // Reset Button
+                btn.innerHTML = '<i class="fa-solid fa-check me-2"></i> Done';
+                btn.classList.add('bg-secondary');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-bolt me-2"></i> Extract Action Items';
+                    btn.classList.remove('bg-secondary');
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.innerHTML = '<i class="fa-solid fa-bolt me-2"></i> Extract Action Items';
+            });
+        }
+    </script>
+</body>
+</html>
+

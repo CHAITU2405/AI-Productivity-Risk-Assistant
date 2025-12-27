@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkGuard AI | Tone Architect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        /* SHARED STYLES */
+        :root { --bg-dark: #0f172a; --glass-bg: rgba(30, 41, 59, 0.7); --primary-glow: #3b82f6; --accent-glow: #8b5cf6;}
+        body { background-color: var(--bg-dark); color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        .sidebar { width: 280px; height: 100vh; position: fixed; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.1); padding: 2rem; z-index: 100; }
+        .nav-link { color: #94a3b8; padding: 14px 20px; border-radius: 12px; margin-bottom: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { background: rgba(59, 130, 246, 0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.3); transform: translateX(5px); }
+        .main-content { margin-left: 280px; padding: 4rem; }
+
+        /* EDITOR STYLES */
+        .glass-editor {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: #fff;
+            width: 100%;
+            padding: 1.5rem;
+            resize: none;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            transition: all 0.3s;
+        }
+        .glass-editor:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .tone-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #94a3b8;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        .tone-btn:hover, .tone-btn.active {
+            background: var(--primary-glow);
+            color: white;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .magic-btn {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+            transition: all 0.3s;
+        }
+        .magic-btn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 0 30px rgba(139, 92, 246, 0.8); }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="mb-5 d-flex align-items-center gap-3">
+            <i class="fa-solid fa-cube fa-2x text-primary"></i>
+            <div><h5 class="fw-bold mb-0 text-white">WorkGuard</h5><small class="text-muted">AI OS v2.0</small></div>
+        </div>
+        <a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <a href="{{ url_for('contract') }}" class="nav-link"><i class="fa-solid fa-file-shield"></i> Contract Guard</a>
+        <a href="{{ url_for('meetings') }}" class="nav-link"><i class="fa-solid fa-list-check"></i> Meeting Actions</a>
+        <a href="{{ url_for('rewrite') }}" class="nav-link active"><i class="fa-solid fa-pen-fancy"></i> Tone Architect</a>
+        <a href="{{ url_for('settings') }}" class="nav-link"><i class="fa-solid fa-cog"></i> Settings</a>
+    </nav>
+
+    <main class="main-content">
+        <h2 class="fw-bold mb-5 animate__animated animate__fadeInDown">Tone Architect</h2>
+
+        <div class="row align-items-center">
+            <div class="col-lg-5">
+                <label class="text-muted mb-2 small text-uppercase fw-bold">Rough Draft</label>
+                <textarea id="input-text" class="glass-editor animate__animated animate__fadeInLeft" rows="10" placeholder="Type something unprofessional here... e.g., 'I can't do this, it's stupid.'">I can't believe you missed the deadline. This is ridiculous and I need the files right now.</textarea>
+            </div>
+
+            <div class="col-lg-2 text-center py-4">
+                <button class="magic-btn mx-auto mb-4" onclick="transformText()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+                <div class="d-flex flex-column gap-3 align-items-center">
+                    <button class="tone-btn active" onclick="setTone(this, 'Professional')">Professional</button>
+                    <button class="tone-btn" onclick="setTone(this, 'Diplomatic')">Diplomatic</button>
+                    <button class="tone-btn" onclick="setTone(this, 'Assertive')">Assertive</button>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <label class="text-success mb-2 small text-uppercase fw-bold">Polished Output</label>
+                <div id="output-box" class="glass-editor d-flex align-items-center justify-content-center text-muted fst-italic animate__animated animate__fadeInRight" style="height: 288px; background: rgba(255,255,255,0.03);">
+                    AI Translation will appear here...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentTone = 'Professional';
+
+        function setTone(btn, tone) {
+            document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTone = tone;
+        }
+
+        function transformText() {
+            const outputBox = document.getElementById('output-box');
+            const inputText = document.getElementById('input-text').value;
+            
+            if (!inputText.trim()) {
+                alert('Please enter some text to rewrite.');
+                return;
+            }
+            
+            outputBox.innerHTML = '<div class="spinner-grow text-primary" role="status"></div>';
+            
+            fetch('/api/rewrite_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: inputText, tone: currentTone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputBox.classList.remove('text-muted', 'fst-italic', 'd-flex', 'align-items-center', 'justify-content-center');
+                outputBox.innerHTML = `<span class="text-white animate__animated animate__fadeIn">${data.rewritten_text}</span>`;
+                outputBox.style.border = "1px solid #22c55e";
+                outputBox.style.boxShadow = "0 0 20px rgba(34, 197, 94, 0.2)";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                outputBox.innerHTML = '<span class="text-danger">Error rewriting text. Please try again.</span>';
+            });
+        }
+    </script>
+</body>
+</html>
+
