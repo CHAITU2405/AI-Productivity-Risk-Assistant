@@ -105,6 +105,15 @@ def require_login(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Initialize database on app startup (important for Render/gunicorn)
+# This ensures the database is created even when running with gunicorn
+try:
+    init_db()
+    print("Database initialized successfully")
+except Exception as e:
+    print(f"Warning: Database initialization error: {e}")
+    print("Database will be created on first use")
+
 # Routes
 @app.route('/')
 def index():
