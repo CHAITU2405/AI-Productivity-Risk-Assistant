@@ -34,50 +34,62 @@ def allowed_file(filename):
 
 # Initialize database
 def init_db():
-    conn = sqlite3.connect(app.config['DATABASE'])
-    c = conn.cursor()
-    
-    # Users table
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  email TEXT UNIQUE NOT NULL,
-                  password_hash TEXT NOT NULL,
-                  first_name TEXT,
-                  last_name TEXT,
-                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-    
-    # Reports table (for both contract and meeting reports)
-    c.execute('''CREATE TABLE IF NOT EXISTS reports
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  user_id INTEGER NOT NULL,
-                  report_type TEXT NOT NULL,
-                  title TEXT,
-                  filename TEXT,
-                  pdf_path TEXT,
-                  report_data TEXT,
-                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  FOREIGN KEY (user_id) REFERENCES users(id))''')
-    
-    # Rewrites table (for tone converter - no PDF needed)
-    c.execute('''CREATE TABLE IF NOT EXISTS rewrites
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  user_id INTEGER,
-                  original_text TEXT,
-                  rewritten_text TEXT,
-                  tone TEXT,
-                  created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  FOREIGN KEY (user_id) REFERENCES users(id))''')
-    
-    # Settings table
-    c.execute('''CREATE TABLE IF NOT EXISTS settings
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  user_id INTEGER,
-                  key TEXT,
-                  value TEXT,
-                  FOREIGN KEY (user_id) REFERENCES users(id))''')
-    
-    conn.commit()
-    conn.close()
+    """Initialize database and create tables if they don't exist"""
+    try:
+        # Ensure database directory exists (for absolute paths)
+        db_path = app.config['DATABASE']
+        db_dir = os.path.dirname(os.path.abspath(db_path))
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+        
+        conn = sqlite3.connect(app.config['DATABASE'])
+        c = conn.cursor()
+        
+        # Users table
+        c.execute('''CREATE TABLE IF NOT EXISTS users
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      email TEXT UNIQUE NOT NULL,
+                      password_hash TEXT NOT NULL,
+                      first_name TEXT,
+                      last_name TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        
+        # Reports table (for both contract and meeting reports)
+        c.execute('''CREATE TABLE IF NOT EXISTS reports
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_id INTEGER NOT NULL,
+                      report_type TEXT NOT NULL,
+                      title TEXT,
+                      filename TEXT,
+                      pdf_path TEXT,
+                      report_data TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_id) REFERENCES users(id))''')
+        
+        # Rewrites table (for tone converter - no PDF needed)
+        c.execute('''CREATE TABLE IF NOT EXISTS rewrites
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_id INTEGER,
+                      original_text TEXT,
+                      rewritten_text TEXT,
+                      tone TEXT,
+                      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      FOREIGN KEY (user_id) REFERENCES users(id))''')
+        
+        # Settings table
+        c.execute('''CREATE TABLE IF NOT EXISTS settings
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_id INTEGER,
+                      key TEXT,
+                      value TEXT,
+                      FOREIGN KEY (user_id) REFERENCES users(id))''')
+        
+        conn.commit()
+        conn.close()
+        print(f"Database initialized: {app.config['DATABASE']}")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        raise
 
 def get_user_id():
     """Get current user ID from session"""
