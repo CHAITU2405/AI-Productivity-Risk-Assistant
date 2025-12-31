@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus | Create Account</title>
+    <title>AI Risk Assistant | Create Account</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -157,35 +157,36 @@
 
     <div id="ui-wrapper">
         <div class="auth-card">
-            <a href="index.html" class="brand-logo"><i class="fa-solid fa-cube text-info me-2"></i>NEXUS</a>
+            <a href="{{ url_for('index') }}" class="brand-logo"><i class="fa-solid fa-cube text-info me-2"></i>AI Risk Assistant</a>
 
             <div class="text-center mb-4">
                 <h4 class="fw-bold mb-1">Create Account</h4>
                 <p class="text-secondary small">Join the intelligence network.</p>
             </div>
 
-            <form onsubmit="event.preventDefault(); window.location.href='index.html'">
+            <form onsubmit="event.preventDefault(); handleRegister();">
+                <div id="register-error" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
                 
                 <div class="row g-2 mb-0">
                     <div class="col-6">
                         <div class="input-group-custom">
-                            <input type="text" class="form-control-custom no-icon" placeholder="First Name" required>
+                            <input type="text" class="form-control-custom no-icon" id="reg-first-name" placeholder="First Name" required>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="input-group-custom">
-                            <input type="text" class="form-control-custom no-icon" placeholder="Last Name" required>
+                            <input type="text" class="form-control-custom no-icon" id="reg-last-name" placeholder="Last Name" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="input-group-custom">
-                    <input type="email" class="form-control-custom" placeholder="Work Email" required>
+                    <input type="email" class="form-control-custom" id="reg-email" placeholder="Work Email" required>
                     <i class="fa-solid fa-envelope input-icon"></i>
                 </div>
                 
                 <div class="input-group-custom">
-                    <input type="password" class="form-control-custom" id="pass-input" placeholder="Create Password" required oninput="checkStrength(this.value)">
+                    <input type="password" class="form-control-custom" id="reg-password" placeholder="Create Password" required oninput="checkStrength(this.value)">
                     <i class="fa-solid fa-lock input-icon"></i>
                 </div>
                 
@@ -204,7 +205,7 @@
             </form>
 
             <div class="auth-footer">
-                Already have an account? <a href="login.html" class="link-highlight">Sign In</a>
+                Already have an account? <a href="{{ url_for('login') }}" class="link-highlight">Sign In</a>
             </div>
         </div>
     </div>
@@ -278,6 +279,37 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+        
+        // --- REGISTER HANDLER ---
+        async function handleRegister() {
+            const firstName = document.getElementById('reg-first-name').value;
+            const lastName = document.getElementById('reg-last-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const errorDiv = document.getElementById('register-error');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    window.location.href = data.redirect || '/dashboard';
+                } else {
+                    errorDiv.textContent = data.error || 'Registration failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>
