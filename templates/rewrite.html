@@ -3,156 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkGuard AI | Tone Architect</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <title>Nexus | Tone Intelligence</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* SHARED STYLES */
-        :root { --bg-dark: #0f172a; --glass-bg: rgba(30, 41, 59, 0.7); --primary-glow: #3b82f6; --accent-glow: #8b5cf6;}
-        body { background-color: var(--bg-dark); color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
-        .sidebar { width: 280px; height: 100vh; position: fixed; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.1); padding: 2rem; z-index: 100; }
-        .nav-link { color: #94a3b8; padding: 14px 20px; border-radius: 12px; margin-bottom: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .nav-link:hover, .nav-link.active { background: rgba(59, 130, 246, 0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.3); transform: translateX(5px); }
-        .main-content { margin-left: 280px; padding: 4rem; }
-
-        /* EDITOR STYLES */
-        .glass-editor {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            color: #fff;
-            width: 100%;
-            padding: 1.5rem;
-            resize: none;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            transition: all 0.3s;
-        }
-        .glass-editor:focus {
-            outline: none;
-            border-color: var(--primary-glow);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-            background: rgba(0, 0, 0, 0.5);
+        :root {
+            --primary: #38bdf8;
+            --bg-deep: #0f172a;
+            --border: rgba(148, 163, 184, 0.1);
         }
 
-        .tone-btn {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #94a3b8;
-            padding: 10px 20px;
-            border-radius: 50px;
-            transition: all 0.3s;
-        }
-        .tone-btn:hover, .tone-btn.active {
-            background: var(--primary-glow);
-            color: white;
-            border-color: var(--primary-glow);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        .magic-btn {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            border: none;
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+        #ui-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
-            transition: all 0.3s;
+            padding: 2rem;
         }
-        .magic-btn:hover { transform: scale(1.1) rotate(15deg); box-shadow: 0 0 30px rgba(139, 92, 246, 0.8); }
+
+        .main-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: clamp(2rem, 5vw, 4rem);
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            min-height: 600px;
+        }
+
+        /* --- INPUT SIDE --- */
+        .smart-input-area {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: 0.3s ease;
+            height: 300px; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .smart-input-area:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+        }
+
+        textarea {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            height: 100%;
+            resize: none;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        textarea::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .tone-selector {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .btn-refine {
+            background: var(--primary);
+            color: #0f172a;
+            font-weight: 800;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            width: 100%; 
+        }
+        
+        .btn-refine:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+        }
+
+        /* --- OUTPUT SIDE --- */
+        .right-panel {
+            position: relative;
+            height: 100%;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid var(--border);
+        }
+
+        #logo-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        #canvas-target {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2; 
+        }
+
+        .static-logo {
+            font-size: 8rem;
+            color: var(--primary);
+            opacity: 0.15;
+            z-index: 1;
+            transition: transform 0.3s, opacity 0.3s, filter 0.3s;
+        }
+
+        /* NEON PULSE SHINE */
+        @keyframes shineBurst {
+            0% { opacity: 0.15; filter: drop-shadow(0 0 0px var(--primary)); transform: scale(1); }
+            10% { opacity: 1; filter: drop-shadow(0 0 60px var(--primary)); transform: scale(1.15); color: #fff; }
+            50% { opacity: 0.8; filter: drop-shadow(0 0 40px var(--primary)); transform: scale(1.1); }
+            100% { opacity: 0.15; filter: drop-shadow(0 0 0px var(--primary)); transform: scale(1); }
+        }
+
+        .shining {
+            animation: shineBurst 1.5s ease-out forwards;
+        }
+
+        /* RESULT CARD */
+        .result-card {
+            display: none;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 992px) {
+            .right-panel { border-left: none; border-top: 1px solid var(--border); padding-top: 2rem; margin-top: 2rem; min-height: 300px; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <div class="mb-5 d-flex align-items-center gap-3">
-            <i class="fa-solid fa-cube fa-2x text-primary"></i>
-            <div><h5 class="fw-bold mb-0 text-white">WorkGuard</h5><small class="text-muted">AI OS v2.0</small></div>
-        </div>
-        <a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-        <a href="{{ url_for('contract') }}" class="nav-link"><i class="fa-solid fa-file-shield"></i> Contract Guard</a>
-        <a href="{{ url_for('meetings') }}" class="nav-link"><i class="fa-solid fa-list-check"></i> Meeting Actions</a>
-        <a href="{{ url_for('rewrite') }}" class="nav-link active"><i class="fa-solid fa-pen-fancy"></i> Tone Architect</a>
-        <a href="{{ url_for('settings') }}" class="nav-link"><i class="fa-solid fa-cog"></i> Settings</a>
-    </nav>
-
-    <main class="main-content">
-        <h2 class="fw-bold mb-5 animate__animated animate__fadeInDown">Tone Architect</h2>
-
-        <div class="row align-items-center">
-            <div class="col-lg-5">
-                <label class="text-muted mb-2 small text-uppercase fw-bold">Rough Draft</label>
-                <textarea id="input-text" class="glass-editor animate__animated animate__fadeInLeft" rows="10" placeholder="Type something unprofessional here... e.g., 'I can't do this, it's stupid.'">I can't believe you missed the deadline. This is ridiculous and I need the files right now.</textarea>
+    <div id="ui-wrapper">
+        <div class="main-card">
+            <!-- Navigation Button -->
+            <div class="mb-4">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Back to Dashboard
+                </a>
             </div>
+            
+            <div class="row h-100">
+                
+                <div class="col-lg-6 d-flex flex-column">
+                    <div class="mb-4">
+                        <span class="badge bg-dark border border-secondary text-info px-3 py-2 mb-3">NLP ENGINE v3.0</span>
+                        <h1 class="display-4 fw-bold">Nexus <span style="color: var(--primary)">Tone</span></h1>
+                        <p class="text-secondary">Elevate your communication. Convert raw drafts into persuasive, professional, or empathetic messaging instantly.</p>
+                    </div>
 
-            <div class="col-lg-2 text-center py-4">
-                <button class="magic-btn mx-auto mb-4" onclick="transformText()">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                </button>
-                <div class="d-flex flex-column gap-3 align-items-center">
-                    <button class="tone-btn active" onclick="setTone(this, 'Professional')">Professional</button>
-                    <button class="tone-btn" onclick="setTone(this, 'Diplomatic')">Diplomatic</button>
-                    <button class="tone-btn" onclick="setTone(this, 'Assertive')">Assertive</button>
+                    <div class="smart-input-area mb-4">
+                        <textarea id="user-input" placeholder="Paste your raw draft here..."></textarea>
+                    </div>
+
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-8">
+                            <select class="tone-selector" id="tone-select">
+                                <option value="professional">Professional & Diplomatic</option>
+                                <option value="persuasive">Persuasive & Sales</option>
+                                <option value="empathetic">Empathetic & Understanding</option>
+                                <option value="executive">Executive & Direct</option>
+                                <option value="viral">Viral & Engaging</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn-refine" id="btn-refine">REFINE</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="right-panel">
+                        
+                        <div id="logo-container">
+                            <div id="canvas-target"></div>
+                            <i class="fa-solid fa-wand-magic-sparkles static-logo" id="main-logo"></i>
+                        </div>
+
+                        <div id="result-container" class="result-card">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <small class="text-uppercase text-info fw-bold">Refined Output</small>
+                                    <h4 class="fw-bold text-white mt-1" id="result-tone-title">Professional</h4>
+                                </div>
+                                <button class="btn btn-sm btn-outline-light rounded-circle" onclick="resetView()"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            
+                            <p class="fs-5 text-light" id="result-text" style="line-height: 1.8;"></p>
+                            
+                            <div class="mt-auto pt-4 border-top border-secondary border-opacity-25 d-flex gap-3">
+                                <button class="btn btn-sm btn-outline-info px-3" onclick="copyText()"><i class="fa-regular fa-copy me-2"></i>Copy</button>
+                                <span class="small text-white-50 align-self-center ms-auto">Tone Match: 99%</span>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
-
-            <div class="col-lg-5">
-                <label class="text-success mb-2 small text-uppercase fw-bold">Polished Output</label>
-                <div id="output-box" class="glass-editor d-flex align-items-center justify-content-center text-muted fst-italic animate__animated animate__fadeInRight" style="height: 288px; background: rgba(255,255,255,0.03);">
-                    AI Translation will appear here...
-                </div>
-            </div>
         </div>
-    </main>
+    </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let currentTone = 'Professional';
+        // --- 3D PARTICLE ENGINE --- 
+        let scene, camera, renderer, particles;
+        let isProcessing = false;
+        const count = 1500; 
+        
+        let initialPositions = []; // Wide Cloud
+        let targetPositions = []; // Tight Cluster on Logo
+        
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000); 
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(300, 300);
+            document.getElementById('canvas-target').appendChild(renderer.domElement);
 
-        function setTone(btn, tone) {
-            document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentTone = tone;
+            // 1. Generate Wide Cloud (Idle State)
+            initialPositions = new Float32Array(count * 3);
+            for(let i=0; i<count; i++) {
+                let theta = Math.random() * Math.PI * 2;
+                let phi = Math.acos((Math.random() * 2) - 1);
+                let r = 5.0 + Math.random() * 2; // Large radius
+                
+                initialPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+                initialPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+                initialPositions[i*3+2] = r * Math.cos(phi);
+            }
+
+            // 2. Generate Tight Cluster (Active State - "Spread on Symbol")
+            targetPositions = new Float32Array(count * 3);
+            for(let i=0; i<count; i++) {
+                let theta = Math.random() * Math.PI * 2;
+                let phi = Math.acos((Math.random() * 2) - 1);
+                let r = 1.8 + Math.random() * 0.5; // TIGHT radius matching Logo
+                
+                targetPositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+                targetPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+                targetPositions[i*3+2] = r * Math.cos(phi);
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(initialPositions.slice(), 3));
+            
+            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ 
+                size: 0.05, 
+                color: 0x38bdf8, 
+                transparent: true, 
+                opacity: 0.5 
+            }));
+            scene.add(particles);
+            camera.position.z = 12;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const currentPos = particles.geometry.attributes.position.array;
+
+                for(let i=0; i<count; i++) {
+                    let tx, ty, tz;
+                    
+                    if (isProcessing) {
+                        // Move to TIGHT CLUSTER (Spread on Logo)
+                        tx = targetPositions[i*3];
+                        ty = targetPositions[i*3+1];
+                        tz = targetPositions[i*3+2];
+                    } else {
+                        // Move to WIDE CLOUD (Idle)
+                        tx = initialPositions[i*3];
+                        ty = initialPositions[i*3+1];
+                        tz = initialPositions[i*3+2];
+                        
+                        // Gentle idle drift
+                        ty += Math.sin(Date.now() * 0.001 + i) * 0.02; 
+                    }
+
+                    // Lerp Movement
+                    currentPos[i*3] += (tx - currentPos[i*3]) * 0.1;
+                    currentPos[i*3+1] += (ty - currentPos[i*3+1]) * 0.1;
+                    currentPos[i*3+2] += (tz - currentPos[i*3+2]) * 0.1;
+                }
+                
+                // Spin faster when processing to simulate energy
+                particles.rotation.y += isProcessing ? 0.05 : 0.003; 
+                particles.geometry.attributes.position.needsUpdate = true;
+                renderer.render(scene, camera);
+            }
+            animate();
         }
 
-        function transformText() {
-            const outputBox = document.getElementById('output-box');
-            const inputText = document.getElementById('input-text').value;
-            
-            if (!inputText.trim()) {
-                alert('Please enter some text to rewrite.');
-                return;
+        // --- APP LOGIC ---
+        const btn = document.getElementById('btn-refine');
+        const input = document.getElementById('user-input');
+        const select = document.getElementById('tone-select');
+        const logo = document.getElementById('main-logo');
+        const logoContainer = document.getElementById('logo-container');
+        const resultContainer = document.getElementById('result-container');
+
+        btn.onclick = async () => {
+            if(!input.value.trim()) { 
+                input.focus(); 
+                return; 
             }
             
-            outputBox.innerHTML = '<div class="spinner-grow text-primary" role="status"></div>';
-            
-            fetch('/api/rewrite_text', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: inputText, tone: currentTone })
-            })
-            .then(response => response.json())
-            .then(data => {
-                outputBox.classList.remove('text-muted', 'fst-italic', 'd-flex', 'align-items-center', 'justify-content-center');
-                outputBox.innerHTML = `<span class="text-white animate__animated animate__fadeIn">${data.rewritten_text}</span>`;
-                outputBox.style.border = "1px solid #22c55e";
-                outputBox.style.boxShadow = "0 0 20px rgba(34, 197, 94, 0.2)";
-            })
-            .catch(error => {
+            btn.disabled = true;
+            btn.innerText = "POLISHING...";
+
+            // 1. TRIGGER CONVERGENCE (Particles spread onto logo)
+            isProcessing = true;
+
+            // 2. WAIT FOR CONTACT (0.6s) -> THEN TRIGGER SHINE
+            setTimeout(() => {
+                // Particles have arrived on the surface. Ignite!
+                logo.classList.add('shining');
+            }, 600);
+
+            try {
+                // Call the actual API
+                const response = await fetch('/api/rewrite_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: input.value,
+                        tone: select.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // 3. COMPLETE & REVEAL
+                    setTimeout(() => {
+                        logoContainer.style.opacity = '0'; // Fade out logo+particles
+                        
+                        setTimeout(() => {
+                            logoContainer.style.display = 'none';
+                            resultContainer.style.display = 'block'; // Show Result
+                            
+                            const toneLabel = select.options[select.selectedIndex].text;
+                            document.getElementById('result-tone-title').innerText = toneLabel;
+                            document.getElementById('result-text').innerText = data.rewritten_text;
+                            
+                            // Update tone match percentage if available
+                            const confidence = data.tone_confidence ? Math.round(data.tone_confidence * 100) : 99;
+                            const matchElement = resultContainer.querySelector('.text-white-50');
+                            if (matchElement) {
+                                matchElement.textContent = `Tone Match: ${confidence}%`;
+                            }
+                            
+                            // Reset UI
+                            btn.disabled = false;
+                            btn.innerText = "REFINE";
+                            
+                            // Reset Physics for next run
+                            isProcessing = false; 
+                            logo.classList.remove('shining'); 
+                        }, 300);
+                    }, 1400); // Reduced to account for API call time
+                } else {
+                    throw new Error(data.error || 'Failed to rewrite text');
+                }
+            } catch (error) {
                 console.error('Error:', error);
-                outputBox.innerHTML = '<span class="text-danger">Error rewriting text. Please try again.</span>';
-            });
+                // Show error but still complete animation
+                setTimeout(() => {
+                    logoContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        logoContainer.style.display = 'none';
+                        resultContainer.style.display = 'block';
+                        document.getElementById('result-tone-title').innerText = 'Error';
+                        document.getElementById('result-text').innerText = 'Failed to process. Please try again.';
+                        btn.disabled = false;
+                        btn.innerText = "REFINE";
+                        isProcessing = false;
+                        logo.classList.remove('shining');
+                    }, 300);
+                }, 1400);
+            }
+        };
+
+        function resetView() {
+            resultContainer.style.display = 'none';
+            logoContainer.style.display = 'flex';
+            
+            // Fade logo back in
+            setTimeout(() => { logoContainer.style.opacity = '1'; }, 50);
+            input.value = '';
         }
+
+        function copyText() {
+            navigator.clipboard.writeText(document.getElementById('result-text').innerText);
+        }
+
+        init3D();
     </script>
 </body>
 </html>
-

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --secondary: #a855f7;
+            --tertiary: #10b981;
+            --bg-deep: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --border: rgba(148, 163, 184, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- 3D BACKGROUND --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- NAVBAR --- */
+        .nexus-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-link { color: #94a3b8; font-weight: 500; margin: 0 15px; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { color: #fff; }
+
+        /* --- LAYOUT --- */
+        #main-wrapper {
+            position: relative;
+            z-index: 10;
+            padding-top: 100px;
+            padding-bottom: 4rem;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero-section { padding: 2rem 0; }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
+        
+        .stat-icon {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* --- TOOL CARDS --- */
+        .tool-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            height: 100%;
+            transition: 0.4s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        .tool-card:hover { transform: translateY(-10px); }
+        .tool-card.contract:hover { border-color: var(--primary); box-shadow: 0 10px 40px -10px rgba(56, 189, 248, 0.3); }
+        .tool-card.meeting:hover { border-color: var(--secondary); box-shadow: 0 10px 40px -10px rgba(168, 85, 247, 0.3); }
+        .tool-card.tone:hover { border-color: var(--tertiary); box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.3); }
+
+        .tool-icon-wrap {
+            width: 70px; height: 70px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            transition: 0.3s;
+        }
+        .tool-card.contract .tool-icon-wrap { color: var(--primary); }
+        .tool-card.meeting .tool-icon-wrap { color: var(--secondary); }
+        .tool-card.tone .tool-icon-wrap { color: var(--tertiary); }
+        .tool-card:hover .tool-icon-wrap { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+
+        .arrow-link {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+        .tool-card:hover .arrow-link { opacity: 1; gap: 10px; }
+
+        /* --- RECENT TABLE --- */
+        .recent-table {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .table-head { 
+            background: rgba(0,0,0,0.2); 
+            padding: 1rem 1.5rem; 
+            border-bottom: 1px solid var(--border); 
+            font-family: 'JetBrains Mono'; 
+            font-size: 0.8rem; 
+            color: #94a3b8; 
+        }
+        .table-row { 
+            padding: 1.2rem 1.5rem; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            transition: 0.2s; 
+        }
+        .table-row:hover { background: rgba(255,255,255,0.03); }
+        .table-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-bg"></div>
+
+    <nav class="nexus-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4 text-white" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-cube me-2 text-info"></i>NEXUS</a>
+            
+            <div class="d-none d-md-flex gap-4">
+                <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
+                <a href="{{ url_for('contract') }}" class="nav-link">Contract</a>
+                <a href="{{ url_for('meetings') }}" class="nav-link">Meetings</a>
+                <a href="{{ url_for('rewrite') }}" class="nav-link">Tone</a>
+            </div>
+
+            <div>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-wrapper" class="container">
+        
+        <section class="hero-section">
+            <h1 class="display-5 fw-bold mb-2">Welcome back!</h1>
+            <p class="text-secondary mb-5">Your intelligence suite is active. System status: <span class="text-success fw-bold">ONLINE</span></p>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(56, 189, 248, 0.1); color: var(--primary);">
+                            <i class="fa-solid fa-file-contract"></i>
+                        </div>
+                        <div>
+                            <div class="h4 fw-bold mb-0">{{ recent_reports|selectattr('type', 'equalto', 'contract')|list|length }}</div>
+                            <div class="small text-secondary">Contracts Analyzed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: var(--secondary);">
+                            <i class="fa-solid fa-microphone-lines"></i>
+                        </div>
+                        <div>
+                            <div class="h4 fw-bold mb-0">{{ recent_reports|selectattr('type', 'equalto', 'meeting')|list|length }}</div>
+                            <div class="small text-secondary">Meetings Processed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--tertiary);">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <div>
+                            <div class="h4 fw-bold mb-0">{{ recent_reports|length }}</div>
+                            <div class="small text-secondary">Total Reports</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <h5 class="text-uppercase text-muted fw-bold mb-4 small" style="letter-spacing: 2px;">Intelligence Modules</h5>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <a href="{{ url_for('contract') }}" class="tool-card contract">
+                        <div class="tool-icon-wrap"><i class="fa-solid fa-file-shield"></i></div>
+                        <h3 class="fw-bold mb-2">Contract AI</h3>
+                        <p class="text-secondary mb-4">Upload PDF agreements to detect risks, liability gaps, and visualize data via 3D heatmaps.</p>
+                        <div class="arrow-link" style="color: var(--primary);">Launch Audit <i class="fa-solid fa-arrow-right ms-2"></i></div>
+                    </a>
+                </div>
+
+                <div class="col-lg-4">
+                    <a href="{{ url_for('meetings') }}" class="tool-card meeting">
+                        <div class="tool-icon-wrap"><i class="fa-solid fa-wave-square"></i></div>
+                        <h3 class="fw-bold mb-2">Meeting AI</h3>
+                        <p class="text-secondary mb-4">Process audio/video recordings to generate transcripts, summaries, and action items.</p>
+                        <div class="arrow-link" style="color: var(--secondary);">Start Analysis <i class="fa-solid fa-arrow-right ms-2"></i></div>
+                    </a>
+                </div>
+
+                <div class="col-lg-4">
+                    <a href="{{ url_for('rewrite') }}" class="tool-card tone">
+                        <div class="tool-icon-wrap"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h3 class="fw-bold mb-2">Tone Refiner</h3>
+                        <p class="text-secondary mb-4">Convert raw text drafts into professional, viral, or empathetic messaging instantly.</p>
+                        <div class="arrow-link" style="color: var(--tertiary);">Open Editor <i class="fa-solid fa-arrow-right ms-2"></i></div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="d-flex justify-content-between align-items-end mb-3">
+                <h5 class="text-uppercase text-muted fw-bold small mb-0" style="letter-spacing: 2px;">Recent Activity</h5>
+            </div>
+            
+            {% if recent_reports %}
+            <div class="recent-table">
+                <div class="table-head d-flex justify-content-between">
+                    <div style="width: 40%">REPORT NAME</div>
+                    <div style="width: 20%">TYPE</div>
+                    <div style="width: 20%">DATE</div>
+                    <div style="width: 20%; text-align: right;">ACTION</div>
+                </div>
+                
+                {% for report in recent_reports %}
+                <div class="table-row">
+                    <div style="width: 40%" class="fw-bold">
+                        <i class="fa-regular fa-file-pdf me-2 opacity-50"></i> {{ report.title }}
+                    </div>
+                    <div style="width: 20%">
+                        <span class="badge bg-dark text-info border border-secondary">
+                            {{ report.type|title }}
+                        </span>
+                    </div>
+                    <div style="width: 20%" class="text-secondary small">
+                        {{ report.created_at[:16] if report.created_at else 'N/A' }}
+                    </div>
+                    <div style="width: 20%; text-align: right;">
+                        {% if report.type == 'contract' %}
+                            <a href="/contract?report_id={{ report.id }}" class="btn btn-sm btn-outline-primary me-2">
+                                <i class="fa-solid fa-eye me-1"></i> View
+                            </a>
+                        {% elif report.type == 'meeting' %}
+                            <a href="/meetings?report_id={{ report.id }}" class="btn btn-sm btn-outline-primary me-2">
+                                <i class="fa-solid fa-eye me-1"></i> View
+                            </a>
+                        {% endif %}
+                        <a href="/api/download_report/{{ report.id }}" class="btn btn-sm btn-outline-info">
+                            <i class="fa-solid fa-download me-1"></i> Download
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-file-circle-question fa-3x text-secondary mb-3"></i>
+                <p class="text-secondary">No reports yet. Start by analyzing a contract or processing a meeting!</p>
+            </div>
+            {% endif %}
+        </section>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- 3D BACKGROUND ENGINE ---
+        let scene, camera, renderer, particles;
+        
+        function initBackground() {
+            const container = document.getElementById('canvas-bg');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 100;
+            const posArray = new Float32Array(particleCount * 3);
+            
+            for(let i=0; i<particleCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 30;
+            }
+            
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.3
+            });
+            
+            particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+            camera.position.z = 10;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.y += 0.001;
+                particles.rotation.x += 0.0005;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        initBackground();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Secure Entry</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --bg-deep: #0f172a;
+            --border: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scroll for 3D bg */
+            min-height: 100vh;
+        }
+
+        /* --- 3D BACKGROUND --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* --- UI WRAPPER --- */
+        #ui-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* --- AUTH CARD --- */
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+            transition: height 0.4s ease;
+        }
+
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+            margin-bottom: 2rem;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        /* --- FORMS --- */
+        .input-group-custom {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .form-control-custom {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: #fff;
+            border-radius: 12px;
+            padding: 1rem 1rem 1rem 3rem; /* Space for icon */
+            width: 100%;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .form-control-custom:focus {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+            outline: none;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            transition: 0.3s;
+        }
+        .form-control-custom:focus + .input-icon { color: var(--primary); }
+
+        .btn-auth {
+            background: var(--primary);
+            color: #0f172a;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 1rem;
+            transition: 0.3s;
+        }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -5px rgba(56, 189, 248, 0.4);
+        }
+
+        /* --- TOGGLE --- */
+        .auth-toggle {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .toggle-link {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .toggle-link:hover { text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+        /* View Management */
+        .view-section { display: none; animation: fadeUp 0.5s ease forwards; }
+        .view-section.active { display: block; }
+        
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: #475569;
+            font-size: 0.8rem;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .divider::before { margin-right: .5em; }
+        .divider::after { margin-left: .5em; }
+
+        .social-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.8rem;
+            border-radius: 12px;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .social-btn:hover { background: rgba(255,255,255,0.08); }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-bg"></div>
+
+    <div id="ui-wrapper">
+        <div class="auth-card">
+            <a href="#" class="brand-logo h2"><i class="fa-solid fa-cube text-info me-2"></i>NEXUS</a>
+
+            <div id="login-view" class="view-section active">
+                <h4 class="fw-bold mb-1">Welcome back</h4>
+                <p class="text-secondary small mb-4">Enter your credentials to access the intelligence suite.</p>
+                
+                <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                    <div class="input-group-custom">
+                        <input type="email" id="login-email" class="form-control-custom" placeholder="Email Address" required>
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                    </div>
+                    
+                    <div class="input-group-custom">
+                        <input type="password" id="login-password" class="form-control-custom" placeholder="Password" required>
+                        <i class="fa-solid fa-lock input-icon"></i>
+                    </div>
+                    
+                    <div id="login-error" class="text-danger small mb-2" style="display: none;"></div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input bg-dark border-secondary" type="checkbox" id="remember">
+                            <label class="form-check-label small text-secondary" for="remember">Remember me</label>
+                        </div>
+                        <a href="#" class="small text-info text-decoration-none">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-auth">Sign In</button>
+                </form>
+
+                <div class="divider">OR CONTINUE WITH</div>
+                
+                <div class="row g-2">
+                    <div class="col"><button class="social-btn"><i class="fa-brands fa-google"></i></button></div>
+                    <div class="col"><button class="social-btn"><i class="fa-brands fa-github"></i></button></div>
+                    <div class="col"><button class="social-btn"><i class="fa-brands fa-microsoft"></i></button></div>
+                </div>
+
+                <div class="auth-toggle">
+                    Don't have an account? <span class="toggle-link" onclick="toggleView('register')">Sign up</span>
+                </div>
+            </div>
+
+            <div id="register-view" class="view-section">
+                <h4 class="fw-bold mb-1">Create Account</h4>
+                <p class="text-secondary small mb-4">Join Nexus to start analyzing data.</p>
+                
+                <form id="register-form" onsubmit="event.preventDefault(); handleRegister();">
+                    <div class="row g-2 mb-0">
+                        <div class="col-6">
+                            <div class="input-group-custom">
+                                <input type="text" id="reg-first-name" class="form-control-custom" placeholder="First Name" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group-custom">
+                                <input type="text" id="reg-last-name" class="form-control-custom" placeholder="Last Name" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group-custom">
+                        <input type="email" id="reg-email" class="form-control-custom" placeholder="Work Email" required>
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                    </div>
+                    
+                    <div class="input-group-custom">
+                        <input type="password" id="reg-password" class="form-control-custom" placeholder="Create Password" required>
+                        <i class="fa-solid fa-lock input-icon"></i>
+                    </div>
+                    
+                    <div id="register-error" class="text-danger small mb-2" style="display: none;"></div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input bg-dark border-secondary" type="checkbox" id="terms" required>
+                        <label class="form-check-label small text-secondary" for="terms">
+                            I agree to the <a href="#" class="text-info text-decoration-none">Terms of Service</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-auth">Create Account</button>
+                </form>
+
+                <div class="auth-toggle">
+                    Already have an account? <span class="toggle-link" onclick="toggleView('login')">Sign in</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- 3D BACKGROUND (NEURAL NETWORK) ---
+        // Same subtle starfield/network used in Dashboard
+        let scene, camera, renderer, particles;
+        
+        function initBackground() {
+            const container = document.getElementById('canvas-bg');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 150;
+            const posArray = new Float32Array(particleCount * 3);
+            
+            for(let i=0; i<particleCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 40; // Wide spread
+            }
+            
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+            camera.position.z = 10;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                // Slow rotation
+                particles.rotation.y += 0.0008;
+                particles.rotation.x += 0.0004;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // --- VIEW TOGGLE LOGIC ---
+        function toggleView(view) {
+            const login = document.getElementById('login-view');
+            const register = document.getElementById('register-view');
+
+            if(view === 'register') {
+                login.classList.remove('active');
+                setTimeout(() => register.classList.add('active'), 100);
+            } else {
+                register.classList.remove('active');
+                setTimeout(() => login.classList.add('active'), 100);
+            }
+        }
+        
+        // --- LOGIN HANDLER ---
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    window.location.href = data.redirect || '/dashboard';
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // --- REGISTER HANDLER ---
+        async function handleRegister() {
+            const firstName = document.getElementById('reg-first-name').value;
+            const lastName = document.getElementById('reg-last-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const errorDiv = document.getElementById('register-error');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    window.location.href = data.redirect || '/dashboard';
+                } else {
+                    errorDiv.textContent = data.error || 'Registration failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Handle form submission for register view
+        document.getElementById('register-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleRegister();
+        });
+
+        // Init
+        initBackground();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

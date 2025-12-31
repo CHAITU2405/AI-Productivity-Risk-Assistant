@@ -3,178 +3,816 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkGuard AI | Contract Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <title>Nexus | Contract Intelligence Suite</title>
     
-    <style>
-        /* SHARED STYLES (Normally this would be in style.css) */
-        :root { --bg-dark: #0f172a; --glass-bg: rgba(30, 41, 59, 0.7); --primary-glow: #3b82f6; }
-        body { background-color: var(--bg-dark); color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
-        
-        .sidebar { width: 280px; height: 100vh; position: fixed; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,0.1); padding: 2rem; z-index: 100; }
-        .nav-link { color: #94a3b8; padding: 14px 20px; border-radius: 12px; margin-bottom: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .nav-link:hover, .nav-link.active { background: rgba(59, 130, 246, 0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.3); transform: translateX(5px); }
-        .main-content { margin-left: 280px; padding: 4rem; }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* PAGE SPECIFIC STYLES */
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --bg-deep: #0f172a;
+            --risk: #f43f5e;
+            --border: rgba(148, 163, 184, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #ui-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            transition: opacity 0.6s ease;
+        }
+
+        .main-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: clamp(1rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- UI ELEMENTS --- */
         .upload-zone {
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 4rem;
-            text-align: center;
-            background: rgba(255,255,255,0.02);
-            transition: all 0.3s;
+            border: 2px dashed var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            padding: 2.5rem 1rem;
             cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .upload-zone:hover { border-color: var(--primary-glow); background: rgba(59, 130, 246, 0.05); box-shadow: 0 0 30px rgba(59, 130, 246, 0.1); }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.05);
+            transform: scale(1.01);
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: #0f172a;
+            font-weight: 700;
+            padding: 1.1rem;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            margin-top: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        /* --- LOADING OVERLAY --- */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-wrap { width: 100%; max-width: 320px; text-align: center; }
+        .progress-bar-bg { height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; }
+        #progress-fill { height: 100%; width: 0%; background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+
+        /* --- DASHBOARD --- */
+        #results-view { display: none; width: 100%; }
         
-        .risk-card {
-            background: rgba(220, 53, 69, 0.1);
-            border-left: 4px solid #dc3545;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            transform: translateX(20px);
-            opacity: 0;
-            animation: slideIn 0.5s forwards;
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.5rem;
         }
-        @keyframes slideIn { to { transform: translateX(0); opacity: 1; } }
+
+        .audit-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 4px 1fr 140px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        
+        /* Mobile Stack */
+        @media (max-width: 992px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .audit-card { grid-template-columns: 4px 1fr; }
+            .card-status { grid-column: 2; border-left: none !important; border-top: 1px solid var(--border); justify-content: flex-start !important; padding: 10px 1.5rem !important; }
+        }
+
+        .heatmap-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 400px;
+            opacity: 0;
+            position: relative;
+        }
+        
+        #heatmap-plot {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        /* Fullscreen Modal */
+        #heatmap-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 2rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #heatmap-modal.active {
+            display: flex;
+        }
+        
+        .modal-header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        #heatmap-modal-plot {
+            width: 100%;
+            max-width: 1200px;
+            height: calc(100vh - 150px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .btn-maximize, .btn-close {
+            background: var(--primary);
+            color: #0f172a;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        
+        .btn-maximize:hover, .btn-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+        
+        .btn-close {
+            background: var(--risk);
+            color: white;
+        }
+
+        .reveal { animation: revealUI 0.6s ease forwards; }
+        @keyframes revealUI { to { opacity: 1; transform: translateY(0); } }
+
+        .accent-bar { background: var(--primary); }
+        .accent-bar.risk { background: var(--risk); }
+        .card-content { padding: 1.2rem 1.5rem; }
+        .card-status { display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.2); font-size: 0.7rem; font-weight: 800; border-left: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <div class="mb-5 d-flex align-items-center gap-3">
-            <i class="fa-solid fa-cube fa-2x text-primary"></i>
-            <div><h5 class="fw-bold mb-0 text-white">WorkGuard</h5><small class="text-muted">AI OS v2.0</small></div>
+    <div id="canvas-container"></div>
+
+    <div id="loading-overlay">
+        <div class="progress-wrap">
+            <div class="h1 fw-bold mb-1" id="percent-text" style="color: var(--primary); font-family: 'JetBrains Mono';">0%</div>
+            <div class="progress-bar-bg"><div id="progress-fill"></div></div>
+            <div class="small text-uppercase fw-bold opacity-50" id="status-label" style="letter-spacing: 2px;">Analyzing Matrix...</div>
         </div>
-        <a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-        <a href="{{ url_for('contract') }}" class="nav-link active"><i class="fa-solid fa-file-shield"></i> Contract Guard</a>
-        <a href="{{ url_for('meetings') }}" class="nav-link"><i class="fa-solid fa-list-check"></i> Meeting Actions</a>
-        <a href="{{ url_for('rewrite') }}" class="nav-link"><i class="fa-solid fa-pen-fancy"></i> Tone Architect</a>
-        <a href="{{ url_for('settings') }}" class="nav-link"><i class="fa-solid fa-cog"></i> Settings</a>
-    </nav>
+    </div>
 
-    <main class="main-content">
-        <h2 class="fw-bold mb-4 animate__animated animate__fadeInLeft">Contract Risk Scanner</h2>
-
-        <div class="row g-5">
-            <div class="col-lg-6">
-                <div class="upload-zone animate__animated animate__zoomIn" id="dropArea">
-                    <i class="fa-solid fa-cloud-arrow-up fa-4x mb-4 text-primary"></i>
-                    <h4>Drop PDF Document Here</h4>
-                    <p class="text-muted">AI will detect liabilities and hidden clauses.</p>
-                    <input type="file" id="fileInput" accept=".pdf" style="display: none;">
-                </div>
-                
-                <div id="scan-loader" class="mt-4 d-none text-center">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-primary small letter-spacing-2">NEURAL ENGINE PROCESSING...</p>
-                </div>
+    <div id="ui-wrapper">
+        <div class="main-card">
+            <!-- Navigation Button -->
+            <div class="mb-4">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Back to Dashboard
+                </a>
             </div>
-
-            <div class="col-lg-6">
-                <div class="p-4 rounded-4" style="background: rgba(0,0,0,0.2); min-height: 400px; border: 1px solid rgba(255,255,255,0.05);">
-                    <h5 class="text-muted mb-4 border-bottom pb-2 border-secondary">Analysis Report</h5>
-                    
-                    <div id="placeholder" class="text-center text-muted py-5">
-                        <i class="fa-solid fa-robot fa-3x mb-3 opacity-25"></i>
-                        <p>Waiting for document...</p>
-                    </div>
-
-                    <div id="results" class="d-none"></div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-        const loader = document.getElementById('scan-loader');
-        const placeholder = document.getElementById('placeholder');
-        const results = document.getElementById('results');
-
-        dropArea.addEventListener('click', () => fileInput.click());
-
-        dropArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropArea.style.borderColor = '#3b82f6';
-        });
-
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.style.borderColor = 'rgba(255,255,255,0.2)';
-        });
-
-        dropArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                analyzeContract(file);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                analyzeContract(file);
-            }
-        });
-
-        function analyzeContract(file) {
-            dropArea.style.borderColor = '#3b82f6';
-            dropArea.innerHTML = `<i class="fa-solid fa-file-pdf fa-3x mb-3 text-white"></i><h5 class="text-white">${file.name}</h5>`;
             
-            loader.classList.remove('d-none');
-            placeholder.classList.add('d-none');
-            results.classList.add('d-none');
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/api/analyze_contract', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                loader.classList.add('d-none');
-                displayResults(data.risks);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                loader.classList.add('d-none');
-                results.innerHTML = '<p class="text-danger">Error analyzing contract. Please try again.</p>';
-                results.classList.remove('d-none');
-            });
-        }
-
-        function displayResults(risks) {
-            results.innerHTML = '';
-            risks.forEach((risk, index) => {
-                const riskType = risk.type === 'Critical Risk' ? 'danger' : 'warning';
-                const bgColor = risk.type === 'Critical Risk' ? 'rgba(220, 53, 69, 0.1)' : 'rgba(255, 193, 7, 0.1)';
-                const borderColor = risk.type === 'Critical Risk' ? '#dc3545' : '#ffc107';
-                
-                const card = document.createElement('div');
-                card.className = 'risk-card';
-                card.style.background = bgColor;
-                card.style.borderColor = borderColor;
-                card.style.animationDelay = `${index * 0.1}s`;
-                card.innerHTML = `
-                    <div class="d-flex justify-content-between text-${riskType === 'danger' ? 'danger' : 'warning'} mb-2">
-                        <strong><i class="fa-solid fa-${risk.type === 'Critical Risk' ? 'triangle-exclamation' : 'circle-info'}"></i> ${risk.type}</strong>
-                        <span class="badge bg-${riskType}">${risk.category}</span>
+            <div id="input-view">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-7 text-center text-lg-start">
+                        <h1 class="display-4 fw-bold mb-3">Nexus <span style="color: var(--primary)">Contract</span></h1>
+                        <p class="text-secondary mb-4 small">Professional legal intelligence. Analyze risks and identify hidden clauses with neural precision.</p>
+                        
+                        <div class="upload-zone text-center" id="drop-zone">
+                            <i class="fa-solid fa-file-shield fa-3x mb-3 opacity-30"></i>
+                            <h6 class="fw-bold mb-1">Upload PDF Contract</h6>
+                            <input type="file" id="file-input" hidden accept=".pdf">
+                        </div>
+                        <button class="btn-action" id="btn-scan" disabled>Execute Neural Audit</button>
                     </div>
-                    <p class="small text-light mb-0 opacity-75">${risk.description}</p>
-                `;
-                results.appendChild(card);
-            });
-            results.classList.remove('d-none');
+                    <div class="col-lg-5 d-none d-lg-block text-center opacity-10">
+                         <i class="fa-solid fa-file-contract fa-10x"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-view">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 gap-3">
+                    <h2 class="fw-bold mb-0">Audit Report</h2>
+                    <button class="btn btn-outline-light btn-sm px-4" onclick="location.reload()">New Scan</button>
+                </div>
+
+                <div class="results-grid">
+                    <div class="audit-list">
+                        <div class="audit-card reveal" style="animation-delay: 0.1s;">
+                            <div class="accent-bar"></div>
+                            <div class="card-content">
+                                <div class="mb-1"><small class="text-primary font-monospace" style="font-size: 0.65rem;">ID: 8821 // SUMMARY</small></div>
+                                <h6 class="fw-bold mb-1">SaaS Master Agreement</h6>
+                                <p class="small text-secondary mb-0">Detected Standard Term Limits. Valid for 24 months.</p>
+                            </div>
+                            <div class="card-status text-primary">REVIEWED</div>
+                        </div>
+
+                        <div class="audit-card reveal" style="animation-delay: 0.3s;">
+                            <div class="accent-bar risk"></div>
+                            <div class="card-content">
+                                <div class="mb-1"><small class="font-monospace" style="color: var(--risk); font-size: 0.65rem;">ID: 8822 // CRITICAL</small></div>
+                                <h6 class="fw-bold mb-1">Uncapped Indemnity</h6>
+                                <p class="small text-secondary mb-0">Clause 4.5 creates unlimited liability for IP claims.</p>
+                            </div>
+                            <div class="card-status" style="color: var(--risk)">ACTION REQ.</div>
+                        </div>
+                    </div>
+
+                    <div class="heatmap-container reveal" style="animation-delay: 0.5s;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 w-100">
+                            <p class="small text-uppercase fw-bold opacity-50 mb-0" style="letter-spacing: 2px; font-size: 0.7rem;" id="heatmap-title">Risk Heatmap</p>
+                            <div class="d-flex gap-2 align-items-center">
+                                <button type="button" class="btn-maximize btn-sm" id="maximize-heatmap" title="Maximize">
+                                    <i class="fa-solid fa-maximize"></i>
+                                </button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="prev-heatmap" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                                    <span class="btn btn-outline-light btn-sm" id="heatmap-counter">1/3</span>
+                                    <button type="button" class="btn btn-outline-light btn-sm" id="next-heatmap"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="heatmap-plot" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+
+                <!-- Fullscreen Heatmap Modal -->
+                <div id="heatmap-modal">
+                    <div class="modal-header">
+                        <h4 class="fw-bold mb-0" id="modal-heatmap-title">Risk Heatmap</h4>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-light btn-sm" id="modal-prev-heatmap" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                                <span class="btn btn-outline-light btn-sm" id="modal-heatmap-counter">1/3</span>
+                                <button type="button" class="btn btn-outline-light btn-sm" id="modal-next-heatmap"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                            <button type="button" class="btn-close btn-sm" id="close-heatmap-modal">
+                                <i class="fa-solid fa-times me-1"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                    <div id="heatmap-modal-plot"></div>
+                </div>
+                </div>
+
+                <button class="btn-action mt-4" id="download-pdf-btn" style="display: none;">
+                    <i class="fa-solid fa-download me-2"></i> Download PDF Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        let scene, camera, renderer, points;
+        let isProcessing = false;
+        const count = 3500;
+        
+        // We need separate arrays to store the "random" positions and the "target" (sphere) positions
+        let initialPositions = [];
+        let targetPositions = [];
+
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // 1. Generate Random Positions (Cloud)
+            initialPositions = new Float32Array(count * 3);
+            for(let i=0; i<count * 3; i++) {
+                initialPositions[i] = (Math.random() - 0.5) * 60;
+            }
+
+            // 2. Generate Sphere Positions (Fibonacci Sphere)
+            targetPositions = new Float32Array(count * 3);
+            for(let i=0; i<count; i++) {
+                let phi = Math.acos(-1 + (2 * i) / count);
+                let theta = Math.sqrt(count * Math.PI) * phi;
+                
+                targetPositions[i*3] = 4 * Math.cos(theta) * Math.sin(phi);
+                targetPositions[i*3+1] = 4 * Math.sin(theta) * Math.sin(phi);
+                targetPositions[i*3+2] = 4 * Math.cos(phi);
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(initialPositions.slice(), 3)); // Start with random
+            
+            points = new THREE.Points(geometry, new THREE.PointsMaterial({ 
+                size: 0.05, 
+                color: 0x38bdf8, 
+                transparent: true, 
+                opacity: 0.4 
+            }));
+            scene.add(points);
+            camera.position.z = 15;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const currentPos = points.geometry.attributes.position.array;
+                
+                for(let i=0; i<count; i++) {
+                    // Determine where this particle WANTS to go
+                    let targetX, targetY, targetZ;
+                    
+                    if(isProcessing) {
+                        // Go to SPHERE
+                        targetX = targetPositions[i*3];
+                        targetY = targetPositions[i*3+1];
+                        targetZ = targetPositions[i*3+2];
+                    } else {
+                        // Go to CLOUD (or drift)
+                        targetX = initialPositions[i*3];
+                        targetY = initialPositions[i*3+1];
+                        targetZ = initialPositions[i*3+2];
+                        // Add drift effect
+                        targetY += Math.sin(Date.now() * 0.001 + i) * 0.02;
+                    }
+
+                    // Move 10% of the way there (Lerp)
+                    currentPos[i*3] += (targetX - currentPos[i*3]) * 0.08;
+                    currentPos[i*3+1] += (targetY - currentPos[i*3+1]) * 0.08;
+                    currentPos[i*3+2] += (targetZ - currentPos[i*3+2]) * 0.08;
+                }
+                
+                points.geometry.attributes.position.needsUpdate = true;
+                points.rotation.y += isProcessing ? 0.05 : 0.002;
+                if(isProcessing) points.rotation.x += 0.02;
+                
+                renderer.render(scene, camera);
+            }
+            animate();
         }
+
+        const scanBtn = document.getElementById('btn-scan');
+        const fileIn = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        
+        dropZone.onclick = () => fileIn.click();
+        
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.background = 'rgba(56, 189, 248, 0.1)';
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'rgba(255, 255, 255, 0.02)';
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'rgba(255, 255, 255, 0.02)';
+            
+            if (e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    fileIn.files = e.dataTransfer.files;
+                    scanBtn.disabled = false;
+                } else {
+                    alert('Please drop a PDF file');
+                }
+            }
+        });
+        
+        fileIn.onchange = (e) => { 
+            if(e.target.files[0]) {
+                scanBtn.disabled = false;
+            }
+        };
+
+        let heatmaps = [];
+        let currentHeatmapIndex = 0;
+
+        scanBtn.onclick = async () => {
+            const file = fileIn.files[0];
+            if (!file) {
+                alert('Please select a PDF file first');
+                return;
+            }
+
+            document.getElementById('ui-wrapper').style.opacity = '0';
+            setTimeout(() => {
+                isProcessing = true;
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('status-label').innerText = 'Analyzing contract...';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                let p = 0;
+                const progressInterval = setInterval(() => {
+                    if (p < 90) {
+                        p += 2;
+                        document.getElementById('progress-fill').style.width = p + "%";
+                        document.getElementById('percent-text').innerText = p + "%";
+                    }
+                }, 200);
+                
+                fetch('/api/analyze_contract', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    clearInterval(progressInterval);
+                    document.getElementById('progress-fill').style.width = '100%';
+                    document.getElementById('percent-text').innerText = '100%';
+                    document.getElementById('status-label').innerText = 'Complete!';
+                    
+                    if (data.status === 'success') {
+                        setTimeout(() => {
+                            isProcessing = false;
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            document.getElementById('ui-wrapper').style.opacity = '1';
+                            document.getElementById('input-view').style.display = 'none';
+                            document.getElementById('results-view').style.display = 'block';
+                            renderer.domElement.style.opacity = '0.1';
+                            
+                            displayResults(data);
+                        }, 500);
+                    } else {
+                        throw new Error(data.error || 'Analysis failed');
+                    }
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    document.getElementById('status-label').innerText = 'Error: ' + error.message;
+                    setTimeout(() => {
+                        isProcessing = false;
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        document.getElementById('ui-wrapper').style.opacity = '1';
+                        alert('Error analyzing contract: ' + error.message);
+                    }, 2000);
+                });
+            }, 600);
+        };
+
+        function displayResults(data) {
+            const auditList = document.querySelector('.audit-list');
+            auditList.innerHTML = '';
+            
+            // Display Summary
+            if (data.summary) {
+                const summaryCard = createCard('SUMMARY', 'Contract Summary', data.summary, 'primary', 'REVIEWED');
+                auditList.appendChild(summaryCard);
+            }
+            
+            // Display Risk Level
+            if (data.risk_level) {
+                const riskCard = createCard('RISK LEVEL', `${data.risk_emoji || ''} ${data.risk_level}`, 
+                    `Found ${data.risks?.length || 0} risk items`, 
+                    data.risk_level === 'HIGH RISK' ? 'risk' : 'primary', 
+                    data.risk_level);
+                auditList.appendChild(riskCard);
+            }
+            
+            // Display Risks
+            if (data.risks && data.risks.length > 0) {
+                data.risks.forEach((risk, idx) => {
+                    const riskType = risk.type === 'Critical Risk' ? 'risk' : 'primary';
+                    const card = createCard(`RISK ${idx + 1}`, risk.category || risk.type, risk.description, riskType, risk.type.toUpperCase());
+                    auditList.appendChild(card);
+                });
+            }
+            
+            // Store heatmaps and display first one
+            if (data.heatmap_data && data.heatmap_data.length > 0) {
+                heatmaps = data.heatmap_data;
+                currentHeatmapIndex = 0;
+                displayHeatmap(0);
+                updateHeatmapNavigation();
+            }
+            
+            // Show download button and set up download handler
+            if (data.report_id) {
+                const downloadBtn = document.getElementById('download-pdf-btn');
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => {
+                    window.location.href = `/api/download_report/${data.report_id}`;
+                };
+            }
+            
+            // Animate cards
+            setTimeout(() => {
+                document.querySelectorAll('.audit-card').forEach((card, idx) => {
+                    card.style.animationDelay = `${idx * 0.1}s`;
+                    card.classList.add('reveal');
+                });
+            }, 100);
+        }
+
+        function createCard(id, title, content, accentColor, status) {
+            const card = document.createElement('div');
+            card.className = 'audit-card';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            const accentClass = accentColor === 'risk' ? 'risk' : '';
+            card.innerHTML = `
+                <div class="accent-bar ${accentClass}"></div>
+                <div class="card-content">
+                    <div class="mb-1"><small class="text-primary font-monospace" style="font-size: 0.65rem;">${id}</small></div>
+                    <h6 class="fw-bold mb-1">${title}</h6>
+                    <p class="small text-secondary mb-0">${content}</p>
+                </div>
+                <div class="card-status" style="color: var(--${accentColor === 'risk' ? 'risk' : 'primary'})">${status}</div>
+            `;
+            return card;
+        }
+
+        function createHeatmapPlot(heatmap, containerId) {
+            let plotData, layout;
+            
+            if (heatmap.type === 'surface') {
+                plotData = [{
+                    type: 'surface',
+                    x: heatmap.data.x,
+                    y: heatmap.data.y,
+                    z: heatmap.data.z,
+                    colorscale: 'Reds',
+                    showscale: true
+                }];
+                layout = {
+                    title: heatmap.title,
+                    scene: {
+                        xaxis: { 
+                            tickvals: heatmap.data.x[0],
+                            ticktext: heatmap.data.clause_names,
+                            title: 'Clause Type'
+                        },
+                        yaxis: {
+                            tickvals: [0, 1, 2],
+                            ticktext: heatmap.data.risk_levels,
+                            title: 'Risk Level'
+                        },
+                        zaxis: { title: 'Risk Intensity' }
+                    },
+                    paper_bgcolor: 'rgba(15, 23, 42, 0)',
+                    plot_bgcolor: 'rgba(15, 23, 42, 0)',
+                    font: { color: '#f1f5f9' }
+                };
+            } else if (heatmap.type === 'scatter3d') {
+                plotData = [{
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: heatmap.data.x,
+                    y: heatmap.data.y,
+                    z: heatmap.data.z,
+                    marker: {
+                        size: 5,
+                        color: heatmap.data.colors,
+                        opacity: 0.7
+                    },
+                    text: heatmap.data.texts,
+                    hovertemplate: '%{text}<extra></extra>'
+                }];
+                layout = {
+                    title: heatmap.title,
+                    scene: {
+                        xaxis: { title: 'PCA Component 1' },
+                        yaxis: { title: 'PCA Component 2' },
+                        zaxis: { title: 'PCA Component 3' }
+                    },
+                    paper_bgcolor: 'rgba(15, 23, 42, 0)',
+                    plot_bgcolor: 'rgba(15, 23, 42, 0)',
+                    font: { color: '#f1f5f9' }
+                };
+            } else if (heatmap.type === 'mesh3d') {
+                plotData = [
+                    {
+                        type: 'mesh3d',
+                        x: heatmap.data.x,
+                        y: heatmap.data.y,
+                        z: heatmap.data.z,
+                        opacity: 0.5,
+                        color: '#38bdf8'
+                    },
+                    {
+                        type: 'scatter3d',
+                        mode: 'markers+text',
+                        x: heatmap.data.x,
+                        y: heatmap.data.y,
+                        z: heatmap.data.z,
+                        text: heatmap.data.clause_names,
+                        marker: { size: 7, color: 'black' },
+                        textposition: 'top center'
+                    }
+                ];
+                layout = {
+                    title: heatmap.title,
+                    scene: {
+                        xaxis: { title: 'Semantic Dimension 1' },
+                        yaxis: { title: 'Semantic Dimension 2' },
+                        zaxis: { title: 'Semantic Dimension 3' }
+                    },
+                    paper_bgcolor: 'rgba(15, 23, 42, 0)',
+                    plot_bgcolor: 'rgba(15, 23, 42, 0)',
+                    font: { color: '#f1f5f9' }
+                };
+            }
+            
+            Plotly.newPlot(containerId, plotData, layout, {responsive: true});
+        }
+
+        function displayHeatmap(index) {
+            if (!heatmaps || heatmaps.length === 0) return;
+            
+            const heatmap = heatmaps[index];
+            document.getElementById('heatmap-title').textContent = heatmap.title;
+            createHeatmapPlot(heatmap, 'heatmap-plot');
+        }
+
+        function displayModalHeatmap(index) {
+            if (!heatmaps || heatmaps.length === 0) return;
+            
+            const heatmap = heatmaps[index];
+            document.getElementById('modal-heatmap-title').textContent = heatmap.title;
+            createHeatmapPlot(heatmap, 'heatmap-modal-plot');
+            updateModalNavigation();
+        }
+
+        function updateHeatmapNavigation() {
+            document.getElementById('heatmap-counter').textContent = `${currentHeatmapIndex + 1}/${heatmaps.length}`;
+            document.getElementById('prev-heatmap').disabled = currentHeatmapIndex === 0;
+            document.getElementById('next-heatmap').disabled = currentHeatmapIndex === heatmaps.length - 1;
+        }
+
+        function updateModalNavigation() {
+            document.getElementById('modal-heatmap-counter').textContent = `${currentHeatmapIndex + 1}/${heatmaps.length}`;
+            document.getElementById('modal-prev-heatmap').disabled = currentHeatmapIndex === 0;
+            document.getElementById('modal-next-heatmap').disabled = currentHeatmapIndex === heatmaps.length - 1;
+        }
+
+        // Regular navigation
+        document.getElementById('next-heatmap').onclick = () => {
+            if (currentHeatmapIndex < heatmaps.length - 1) {
+                currentHeatmapIndex++;
+                displayHeatmap(currentHeatmapIndex);
+                updateHeatmapNavigation();
+            }
+        };
+
+        document.getElementById('prev-heatmap').onclick = () => {
+            if (currentHeatmapIndex > 0) {
+                currentHeatmapIndex--;
+                displayHeatmap(currentHeatmapIndex);
+                updateHeatmapNavigation();
+            }
+        };
+
+        // Modal navigation
+        document.getElementById('modal-next-heatmap').onclick = () => {
+            if (currentHeatmapIndex < heatmaps.length - 1) {
+                currentHeatmapIndex++;
+                displayModalHeatmap(currentHeatmapIndex);
+                updateModalNavigation();
+            }
+        };
+
+        document.getElementById('modal-prev-heatmap').onclick = () => {
+            if (currentHeatmapIndex > 0) {
+                currentHeatmapIndex--;
+                displayModalHeatmap(currentHeatmapIndex);
+                updateModalNavigation();
+            }
+        };
+
+        // Maximize button
+        document.getElementById('maximize-heatmap').onclick = () => {
+            if (heatmaps && heatmaps.length > 0) {
+                document.getElementById('heatmap-modal').classList.add('active');
+                displayModalHeatmap(currentHeatmapIndex);
+            }
+        };
+
+        // Close modal
+        document.getElementById('close-heatmap-modal').onclick = () => {
+            document.getElementById('heatmap-modal').classList.remove('active');
+        };
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('heatmap-modal').classList.contains('active')) {
+                document.getElementById('heatmap-modal').classList.remove('active');
+            }
+        });
+        init3D();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Check for report_id in URL query parameters to load existing report
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reportId = urlParams.get('report_id');
+            
+            if (reportId) {
+                // Hide input view and show loading
+                document.getElementById('input-view').style.display = 'none';
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('status-label').innerText = 'Loading report...';
+                
+                // Fetch report data
+                fetch(`/api/view_report/${reportId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success' || data.report_id) {
+                            // Hide loading and show results
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            document.getElementById('ui-wrapper').style.opacity = '1';
+                            document.getElementById('results-view').style.display = 'block';
+                            renderer.domElement.style.opacity = '0.1';
+                            
+                            // Display the report data
+                            displayResults(data);
+                        } else {
+                            throw new Error(data.error || 'Failed to load report');
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        document.getElementById('ui-wrapper').style.opacity = '1';
+                        document.getElementById('input-view').style.display = 'block';
+                        alert('Error loading report: ' + error.message);
+                    });
+            }
+        });
     </script>
 </body>
 </html>
-

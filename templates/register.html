@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Create Account</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --bg-deep: #0f172a;
+            --border: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- 3D BACKGROUND --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- LAYOUT --- */
+        #ui-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* --- AUTH CARD --- */
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 500px; /* Slightly wider for 2-col inputs */
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+            margin-bottom: 2rem;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            font-size: 1.8rem;
+        }
+
+        /* --- FORMS --- */
+        .input-group-custom {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .form-control-custom {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: #fff;
+            border-radius: 12px;
+            padding: 1rem 1rem 1rem 3rem; /* Space for icon */
+            width: 100%;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        
+        .form-control-custom.no-icon { padding-left: 1rem; } /* No icon padding */
+
+        .form-control-custom:focus {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+            outline: none;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            transition: 0.3s;
+        }
+        .form-control-custom:focus + .input-icon { color: var(--primary); }
+
+        .btn-auth {
+            background: var(--primary);
+            color: #0f172a;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 1rem;
+            transition: 0.3s;
+        }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -5px rgba(56, 189, 248, 0.4);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .link-highlight {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .link-highlight:hover { text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+        .password-strength {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .strength-bar { height: 100%; width: 0%; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-bg"></div>
+
+    <div id="ui-wrapper">
+        <div class="auth-card">
+            <a href="index.html" class="brand-logo"><i class="fa-solid fa-cube text-info me-2"></i>NEXUS</a>
+
+            <div class="text-center mb-4">
+                <h4 class="fw-bold mb-1">Create Account</h4>
+                <p class="text-secondary small">Join the intelligence network.</p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); window.location.href='index.html'">
+                
+                <div class="row g-2 mb-0">
+                    <div class="col-6">
+                        <div class="input-group-custom">
+                            <input type="text" class="form-control-custom no-icon" placeholder="First Name" required>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group-custom">
+                            <input type="text" class="form-control-custom no-icon" placeholder="Last Name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group-custom">
+                    <input type="email" class="form-control-custom" placeholder="Work Email" required>
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                </div>
+                
+                <div class="input-group-custom">
+                    <input type="password" class="form-control-custom" id="pass-input" placeholder="Create Password" required oninput="checkStrength(this.value)">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                </div>
+                
+                <div class="password-strength">
+                    <div class="strength-bar" id="strength-bar"></div>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="terms" required>
+                    <label class="form-check-label small text-secondary" for="terms">
+                        I agree to the <a href="#" class="text-info text-decoration-none">Terms of Service</a> & <a href="#" class="text-info text-decoration-none">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-auth">Register Access</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html" class="link-highlight">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- PASSWORD STRENGTH LOGIC ---
+        function checkStrength(password) {
+            const bar = document.getElementById('strength-bar');
+            let strength = 0;
+            if (password.length > 5) strength += 20;
+            if (password.match(/[a-z]+/)) strength += 20;
+            if (password.match(/[A-Z]+/)) strength += 20;
+            if (password.match(/[0-9]+/)) strength += 20;
+            if (password.match(/[$@#&!]+/)) strength += 20;
+
+            bar.style.width = strength + "%";
+            
+            if(strength <= 40) bar.style.backgroundColor = "#f43f5e"; // Red
+            else if(strength <= 80) bar.style.backgroundColor = "#fbbf24"; // Yellow
+            else bar.style.backgroundColor = "#10b981"; // Green
+        }
+
+        // --- 3D BACKGROUND (Neural Network) ---
+        let scene, camera, renderer, particles;
+        
+        function initBackground() {
+            const container = document.getElementById('canvas-bg');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 180;
+            const posArray = new Float32Array(particleCount * 3);
+            
+            for(let i=0; i<particleCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 45; // Wide spread
+            }
+            
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            // Register Page uses a slight Emerald tint for "New Beginning/Growth"
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0x38bdf8, // Keeping Cyan for brand consistency
+                transparent: true,
+                opacity: 0.4
+            });
+            
+            particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+            camera.position.z = 10;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                // Subtle rotation
+                particles.rotation.y += 0.001;
+                particles.rotation.x -= 0.0005; // Reverse X for variety
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        initBackground();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

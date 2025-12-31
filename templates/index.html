@@ -3,273 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkGuard AI | Command Center</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <title>Nexus | The Intelligence Engine</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --primary-glow: #3b82f6;
-            --accent-glow: #8b5cf6;
+            --primary: #38bdf8;
+            --secondary: #a855f7;
+            --tertiary: #10b981;
+            --bg-deep: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --border: rgba(148, 163, 184, 0.1);
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: #f8fafc;
-            font-family: 'Segoe UI', sans-serif;
-            overflow-x: hidden;
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Outfit', sans-serif;
             margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* --- 1. HOLOGRAPHIC LOADER --- */
-        #loader {
+        /* --- 3D BACKGROUND --- */
+        #canvas-bg {
             position: fixed;
-            inset: 0;
-            background: #020617;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            transition: opacity 0.8s ease;
-        }
-        
-        .scanner-line {
-            width: 300px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-glow), transparent);
-            animation: scan 1.5s infinite ease-in-out;
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .loader-text {
-            margin-top: 20px;
-            font-family: monospace;
-            color: var(--primary-glow);
-            letter-spacing: 4px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes scan { 0% { transform: scaleX(0); opacity: 0; } 50% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(0); opacity: 0; } }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        /* --- 2. GLASS SIDEBAR --- */
-        .sidebar {
-            width: 280px;
-            height: 100vh;
-            position: fixed;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border);
-            padding: 2rem;
-            z-index: 100;
-        }
-
-        .nav-link {
-            color: #94a3b8;
-            padding: 14px 20px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid transparent;
-            text-decoration: none;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: rgba(59, 130, 246, 0.1);
-            color: white;
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
-            transform: translateX(5px);
-        }
-
-        /* --- 3. 3D CARD SYSTEM --- */
-        .main-content { margin-left: 280px; padding: 4rem; }
-
-        .tilt-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2.5rem;
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
-            transition: transform 0.1s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* The Glare Effect */
-        .tilt-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
             pointer-events: none;
         }
 
-        .tilt-card:hover::before { opacity: 1; }
-        .tilt-card:hover { 
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5); 
-            border-color: rgba(59, 130, 246, 0.4);
+        /* --- NAVBAR --- */
+        .nexus-nav {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-link { color: #94a3b8; font-weight: 500; margin: 0 15px; transition: 0.3s; }
+        .nav-link:hover { color: #fff; }
+
+        .btn-login {
+            color: #fff; border: 1px solid var(--border); padding: 8px 20px; border-radius: 50px; text-decoration: none; transition: 0.3s; font-size: 0.9rem;
+        }
+        .btn-login:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
+
+        .btn-cta-nav {
+            background: var(--primary); color: #0f172a; padding: 8px 24px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.9rem; transition: 0.3s; margin-left: 10px;
+        }
+        .btn-cta-nav:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+
+        /* --- HERO --- */
+        .hero-section {
+            position: relative;
+            z-index: 10;
+            padding: 180px 0 100px;
+            text-align: center;
         }
 
-        /* 3D Inner Content Float */
-        .card-content { transform: translateZ(20px); }
-        .card-icon { transform: translateZ(40px); font-size: 2.5rem; margin-bottom: 1rem; }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
 
-        /* --- 4. GLOWING UTILS --- */
-        .text-glow { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-        .status-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; }
+        .display-hero {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-lead {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+        }
+
+        .btn-hero-primary {
+            background: var(--primary); color: #0f172a; padding: 16px 40px; border-radius: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border: none; transition: 0.3s;
+            text-decoration: none; display: inline-block;
+        }
+        .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4); color: #0f172a; }
+
+        .btn-hero-secondary {
+            background: rgba(255,255,255,0.05); color: #fff; padding: 16px 40px; border-radius: 12px; font-weight: 700; border: 1px solid var(--border); transition: 0.3s; margin-left: 1rem;
+            text-decoration: none; display: inline-block;
+        }
+        .btn-hero-secondary:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
+
+        /* --- FEATURES --- */
+        .features-section { position: relative; z-index: 10; padding: 100px 0; }
+        
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            height: 100%;
+            transition: 0.4s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-card:hover { transform: translateY(-10px); }
+        .feature-card.c1:hover { border-color: var(--primary); box-shadow: 0 20px 50px -15px rgba(56, 189, 248, 0.2); }
+        .feature-card.c2:hover { border-color: var(--secondary); box-shadow: 0 20px 50px -15px rgba(168, 85, 247, 0.2); }
+        .feature-card.c3:hover { border-color: var(--tertiary); box-shadow: 0 20px 50px -15px rgba(16, 185, 129, 0.2); }
+
+        .feature-icon {
+            width: 70px; height: 70px;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .c1 .feature-icon { color: var(--primary); }
+        .c2 .feature-icon { color: var(--secondary); }
+        .c3 .feature-icon { color: var(--tertiary); }
+
+        /* --- FOOTER --- */
+        footer { position: relative; z-index: 10; padding: 4rem 0; border-top: 1px solid var(--border); background: rgba(2, 4, 10, 0.8); }
+        .footer-link { color: #64748b; text-decoration: none; display: block; margin-bottom: 10px; transition: 0.2s; }
+        .footer-link:hover { color: var(--primary); }
+
+        /* --- RECENT TABLE --- */
+        .recent-table {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .table-head { 
+            background: rgba(0,0,0,0.2); 
+            padding: 1rem 1.5rem; 
+            border-bottom: 1px solid var(--border); 
+            font-family: 'JetBrains Mono'; 
+            font-size: 0.8rem; 
+            color: #94a3b8; 
+        }
+        .table-row { 
+            padding: 1.2rem 1.5rem; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            transition: 0.2s; 
+        }
+        .table-row:hover { background: rgba(255,255,255,0.03); }
+        .table-row:last-child { border-bottom: none; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .display-hero { font-size: 3rem; }
+            .btn-hero-secondary { margin-left: 0; margin-top: 1rem; display: block; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="scanner-line"></div>
-        <div class="loader-text">SYSTEM INITIALIZING...</div>
-    </div>
+    <div id="canvas-bg"></div>
 
-    <nav class="sidebar">
-        <div class="mb-5 d-flex align-items-center gap-3">
-            <i class="fa-solid fa-cube fa-2x text-primary animate__animated animate__rotateIn"></i>
+    <nav class="nexus-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4 text-white" href="#"><i class="fa-solid fa-cube me-2 text-info"></i>NEXUS</a>
+            
+            <div class="d-none d-md-block">
+                <a href="#features" class="nav-link d-inline-block">Features</a>
+                <a href="#" class="nav-link d-inline-block">Pricing</a>
+                <a href="#" class="nav-link d-inline-block">Enterprise</a>
+            </div>
+
             <div>
-                <h5 class="fw-bold mb-0 text-white">WorkGuard</h5>
-                <small class="text-muted" style="font-size: 0.7rem; letter-spacing: 1px;">AI OS v2.0</small>
+                <a href="{{ url_for('login') }}" class="btn-login d-none d-sm-inline-block">Sign In</a>
+                <a href="{{ url_for('register') }}" class="btn-cta-nav">Get Started</a>
             </div>
         </div>
-        <a href="{{ url_for('index') }}" class="nav-link active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-        <a href="{{ url_for('contract') }}" class="nav-link"><i class="fa-solid fa-file-shield"></i> Contract Guard</a>
-        <a href="{{ url_for('meetings') }}" class="nav-link"><i class="fa-solid fa-list-check"></i> Meeting Actions</a>
-        <a href="{{ url_for('rewrite') }}" class="nav-link"><i class="fa-solid fa-pen-fancy"></i> Tone Architect</a>
-        <a href="{{ url_for('settings') }}" class="nav-link"><i class="fa-solid fa-cog"></i> Settings</a>
     </nav>
 
-    <main class="main-content">
-        <header class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
-            <div>
-                <h1 class="fw-bold display-6">Command Center</h1>
-                <p class="text-muted">Overview of productivity metrics & risk analysis.</p>
-            </div>
-            <div class="d-flex align-items-center gap-3 tilt-card py-2 px-4" style="border-radius: 50px;">
-                <div class="status-dot"></div>
-                <small class="text-white card-content">Systems Online</small>
-            </div>
-        </header>
+    <section class="hero-section container">
+        <div class="hero-badge"><i class="fa-solid fa-bolt me-2"></i>NEXUS INTELLIGENCE v3.0</div>
+        
+        <h1 class="display-hero">The Neural Engine<br>for Modern Business.</h1>
+        
+        <p class="hero-lead">
+            Unify your workflow with AI-driven contract auditing, meeting intelligence, and tonal refinement. 
+            One suite to rule your data.
+        </p>
+        
+        <div>
+            <a href="{{ url_for('register') }}" class="btn-hero-primary">Start Free Trial</a>
+            <a href="#demo" class="btn-hero-secondary"><i class="fa-solid fa-play me-2"></i> Watch Demo</a>
+        </div>
+    </section>
 
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="tilt-card h-100">
-                    <div class="card-icon text-danger"><i class="fa-solid fa-shield-cat"></i></div>
-                    <div class="card-content">
-                        <h2 class="fw-bold display-4 mb-0">98%</h2>
-                        <p class="text-muted">Risk Mitigation</p>
-                        <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.1);">
-                            <div class="progress-bar bg-danger" style="width: 98%; box-shadow: 0 0 10px red;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="tilt-card h-100">
-                    <div class="card-icon text-primary"><i class="fa-solid fa-bolt"></i></div>
-                    <div class="card-content">
-                        <h2 class="fw-bold display-4 mb-0">12h</h2>
-                        <p class="text-muted">Time Saved / Week</p>
-                        <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.1);">
-                            <div class="progress-bar bg-primary" style="width: 75%; box-shadow: 0 0 10px blue;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="tilt-card h-100">
-                    <div class="card-icon text-warning"><i class="fa-solid fa-file-contract"></i></div>
-                    <div class="card-content">
-                        <h2 class="fw-bold display-4 mb-0">45</h2>
-                        <p class="text-muted">Docs Processed</p>
-                        <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.1);">
-                            <div class="progress-bar bg-warning" style="width: 45%; box-shadow: 0 0 10px orange;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <section id="features" class="features-section container">
+        <div class="text-center mb-5">
+            <h6 class="text-uppercase text-info fw-bold" style="letter-spacing: 2px;">Core Modules</h6>
+            <h2 class="fw-bold display-6">Three Pillars of Intelligence</h2>
         </div>
 
-        <h4 class="fw-bold mb-4 text-white">Active Modules</h4>
         <div class="row g-4">
-            <div class="col-md-6">
-                <a href="{{ url_for('contract') }}" class="text-decoration-none text-white">
-                    <div class="tilt-card d-flex align-items-center gap-4">
-                        <div class="card-icon mb-0 bg-primary bg-opacity-25 p-3 rounded-circle text-primary">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </div>
-                        <div class="card-content">
-                            <h4>Analyze Contract</h4>
-                            <p class="text-muted mb-0">Drag & drop legal docs for AI risk assessment.</p>
-                        </div>
-                        <i class="fa-solid fa-arrow-right ms-auto text-muted"></i>
-                    </div>
-                </a>
+            <div class="col-lg-4">
+                <div class="feature-card c1">
+                    <div class="feature-icon"><i class="fa-solid fa-file-shield"></i></div>
+                    <h3 class="fw-bold mb-3">Contract AI</h3>
+                    <p class="text-secondary mb-0">
+                        Instantly analyze legal documents for risk. Our neural engine identifies hidden clauses, uncapped liabilities, and compliance gaps with 3D heatmap visualization.
+                    </p>
+                </div>
             </div>
-            <div class="col-md-6">
-                <a href="{{ url_for('rewrite') }}" class="text-decoration-none text-white">
-                    <div class="tilt-card d-flex align-items-center gap-4">
-                        <div class="card-icon mb-0 bg-success bg-opacity-25 p-3 rounded-circle text-success">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        </div>
-                        <div class="card-content">
-                            <h4>Tone Architect</h4>
-                            <p class="text-muted mb-0">Rewrite emails to be diplomatic or assertive.</p>
-                        </div>
-                        <i class="fa-solid fa-arrow-right ms-auto text-muted"></i>
-                    </div>
-                </a>
+
+            <div class="col-lg-4">
+                <div class="feature-card c2">
+                    <div class="feature-icon"><i class="fa-solid fa-wave-square"></i></div>
+                    <h3 class="fw-bold mb-3">Meeting AI</h3>
+                    <p class="text-secondary mb-0">
+                        Turn chaos into clarity. Upload audio or video recordings to get instant transcripts, speaker diarization, and automated action item extraction.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="feature-card c3">
+                    <div class="feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h3 class="fw-bold mb-3">Tone Refiner</h3>
+                    <p class="text-secondary mb-0">
+                        Perfect your messaging. Convert raw thoughts into professional, persuasive, or empathetic communication using our advanced NLP tone shifting engine.
+                    </p>
+                </div>
             </div>
         </div>
-    </main>
+    </section>
 
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <a class="h4 text-white text-decoration-none fw-bold" href="#"><i class="fa-solid fa-cube me-2 text-info"></i>NEXUS</a>
+                    <p class="text-secondary mt-3 small">
+                        The next generation of business intelligence.<br>
+                        San Francisco, CA.
+                    </p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-white fw-bold mb-3">Platform</h6>
+                    <a href="#" class="footer-link">Features</a>
+                    <a href="#" class="footer-link">Pricing</a>
+                    <a href="#" class="footer-link">API</a>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-white fw-bold mb-3">Company</h6>
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Careers</a>
+                    <a href="#" class="footer-link">Blog</a>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="text-white fw-bold mb-3">Stay Updated</h6>
+                    <div class="input-group">
+                        <input type="email" class="form-control bg-dark border-secondary text-white" placeholder="Enter email">
+                        <button class="btn btn-info">Join</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-top border-secondary border-opacity-25 mt-5 pt-4 text-center">
+                <small class="text-secondary">&copy; 2024 Nexus Intelligence Inc. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // 1. Remove Loader
-        window.onload = () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
-            }, 1000);
-        };
+        // --- 3D BACKGROUND ENGINE ---
+        let scene, camera, renderer, particles;
+        
+        function initBackground() {
+            const container = document.getElementById('canvas-bg');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
 
-        // 2. 3D Tilt Logic
-        document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                // Calculate rotation based on cursor position
-                const xPct = x / rect.width;
-                const yPct = y / rect.height;
-                
-                const rotateX = (0.5 - yPct) * 20; // Max 20deg tilt
-                const rotateY = (xPct - 0.5) * 20;
+            // Create Starfield
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 200; // More stars for landing page
+            const posArray = new Float32Array(particleCount * 3);
+            
+            for(let i=0; i<particleCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 60; 
+            }
+            
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.3
+            });
+            
+            particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+            camera.position.z = 15;
 
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            // Simple Mouse Interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                mouseX = event.clientX / window.innerWidth - 0.5;
+                mouseY = event.clientY / window.innerHeight - 0.5;
             });
 
-            // Reset on leave
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
-            });
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotation
+                particles.rotation.y += 0.0005;
+                particles.rotation.x += 0.0002;
+
+                // Mouse Parallax
+                camera.position.x += (mouseX * 2 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 2 - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        initBackground();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
 </body>
 </html>
-
+</html>

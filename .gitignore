@@ -37,6 +37,26 @@ uploads/
 *.pdf
 *.doc
 *.docx
+*.mp3
+*.mp4
+*.wav
+*.m4a
+*.webm
+*.ogg
+*.avi
+*.mov
+
+# Environment variables
+.env
+.env.local
+
+# ML Models Cache
+.cache/
+models/
+*.bin
+*.safetensors
+__pycache__/
+*.pyc
 
 # IDE
 .vscode/
